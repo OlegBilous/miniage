@@ -9,11 +9,13 @@ MiniAGI is a simple autonomous agent compatible with GPT-3.5-Turbo and GPT-4. It
 ## Installation
 
 ```
-git clone https://github.com/muellerberndt/mini-agi
+git clone https://github.com/OlegBilous/mini-agi
 cd mini-agi
 pip install -r requirements.txt
 cp .env_example .env
 ```
+
+Note that Python 3.10 or higher is required.
 
 ## Usage
 
