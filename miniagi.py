@@ -9,6 +9,7 @@ its performance, and retaining memory of actions.
 import os
 import sys
 import re
+import argparse
 import platform
 import urllib
 from pathlib import Path
@@ -433,9 +434,9 @@ class MiniAGI:
         """
         Executes the command proposed by the agent and updates the agent's memory.
         """
-        if command == "process_data":
+        if self.proposed_command == "process_data":
             obs = self.__process_data(self.proposed_arg)
-        elif command == "ingest_data":
+        elif self.proposed_command == "ingest_data":
             obs = self.__ingest_data(self.proposed_arg)
         else:
             obs = Commands.execute_command(self.proposed_command, self.proposed_arg)
@@ -462,6 +463,35 @@ def get_bool_env(env_var: str) -> bool:
     return os.getenv(env_var) in ['true', '1', 't', 'y', 'yes']
 
 
+def parse_cli_args(argv: list[str]) -> argparse.Namespace:
+    """
+    Parses command-line arguments.
+
+    Args:
+        argv (list[str]): Command-line arguments excluding the executable name.
+
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description="Run MiniAGI against an objective."
+    )
+    parser.add_argument(
+        "objective",
+        nargs="+",
+        help="Objective for MiniAGI. Quotes are optional for multi-word objectives."
+    )
+    parser.add_argument(
+        "--work-dir",
+        help="Working directory to use instead of WORK_DIR from the environment."
+    )
+
+    parsed_args = parser.parse_args(argv)
+    parsed_args.objective = " ".join(parsed_args.objective)
+
+    return parsed_args
+
+
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -469,12 +499,9 @@ if __name__ == "__main__":
 
     PROMPT_USER = get_bool_env("PROMPT_USER")
     ENABLE_CRITIC = get_bool_env("ENABLE_CRITIC")
+    cli_args = parse_cli_args(sys.argv[1:])
 
-    if len(sys.argv) != 2:
-        print("Usage: miniagi.py <objective>")
-        sys.exit(0)
-
-    work_dir = os.getenv("WORK_DIR")
+    work_dir = cli_args.work_dir or os.getenv("WORK_DIR")
 
     if work_dir is None or not work_dir:
         work_dir = os.path.join(Path.home(), "miniagi")
@@ -492,7 +519,7 @@ if __name__ == "__main__":
     miniagi = MiniAGI(
         os.getenv("MODEL"),
         os.getenv("SUMMARIZER_MODEL"),
-        sys.argv[1],
+        cli_args.objective,
         int(os.getenv("MAX_CONTEXT_SIZE")),
         int(os.getenv("MAX_MEMORY_ITEM_SIZE")),
         get_bool_env("DEBUG")

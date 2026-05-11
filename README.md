@@ -29,6 +29,18 @@ For example:
 python miniagi.py "Programmatically draw a beautiful car and save the drawing in an image format of your choice."
 ```
 
+Objective quotes are optional:
+
+```
+python miniagi.py Programmatically draw a beautiful car
+```
+
+To override `WORK_DIR` for a single run, pass `--work-dir`:
+
+```
+python miniagi.py --work-dir ./miniagi-work Create a todo list app
+```
+
 ### Enabling the critic
 
 The critic may improve accuracy of the agent at the cost of additional API requests. To activate it set `ENABLE_CRITIC` to `true` in your env.
