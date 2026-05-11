@@ -485,6 +485,11 @@ def parse_cli_args(argv: list[str]) -> argparse.Namespace:
         "--work-dir",
         help="Working directory to use instead of WORK_DIR from the environment."
     )
+    parser.add_argument(
+        "--critic",
+        action="store_true",
+        help="Enable the critic for this run, regardless of ENABLE_CRITIC."
+    )
 
     parsed_args = parser.parse_args(argv)
     parsed_args.objective = " ".join(parsed_args.objective)
@@ -497,9 +502,9 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 if __name__ == "__main__":
 
-    PROMPT_USER = get_bool_env("PROMPT_USER")
-    ENABLE_CRITIC = get_bool_env("ENABLE_CRITIC")
     cli_args = parse_cli_args(sys.argv[1:])
+    PROMPT_USER = get_bool_env("PROMPT_USER")
+    ENABLE_CRITIC = cli_args.critic or get_bool_env("ENABLE_CRITIC")
 
     work_dir = cli_args.work_dir or os.getenv("WORK_DIR")
 

@@ -45,6 +45,12 @@ python miniagi.py --work-dir ./miniagi-work Create a todo list app
 
 The critic may improve accuracy of the agent at the cost of additional API requests. To activate it set `ENABLE_CRITIC` to `true` in your env.
 
+You can also enable it for a single run:
+
+```
+python miniagi.py --critic Create a todo list app
+```
+
 ### Advanced usage
 
 - [Docs for advanced users](docs/Advanced.md)
