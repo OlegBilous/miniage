@@ -5,6 +5,7 @@ See: https://stackoverflow.com/questions/4995733/how-to-create-a-spinning-comman
 
 # pylint: disable=invalid-name
 
+import itertools
 import sys
 import time
 import threading
@@ -24,9 +25,7 @@ class Spinner:
         Yields:
             str: A cursor character for the spinning animation.
         """
-        while 1:
-            for cursor in '|/-\\':
-                yield cursor
+        yield from itertools.cycle('|/-\\')
 
     def __init__(self, delay=None):
         """

@@ -171,10 +171,11 @@ class MiniAGI:
         agent_model: str,
         summarizer_model: str,
         objective: str,
+        *,
         max_context_size: int,
         max_memory_item_size: int,
-        debug: bool = False
-        ):
+        debug: bool = False,
+    ):
         """
         Constructs a `MiniAGI` instance.
 
@@ -354,7 +355,7 @@ class MiniAGI:
             str: Observation: The contents of the URL or file.
         """
 
-        if arg.startswith("http://") or arg.startswith("https://"):
+        if _arg.startswith("http://") or _arg.startswith("https://"):
             with urlopen(_arg) as response:
                 html = response.read()
             data = BeautifulSoup(
@@ -490,9 +491,22 @@ def parse_cli_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Enable the critic for this run, regardless of ENABLE_CRITIC."
     )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=None,
+        metavar="N",
+        help=(
+            "Exit after N successful think() cycles (each counts one step). "
+            "Retries after an invalid LLM response do not count. Omit for no limit."
+        ),
+    )
 
     parsed_args = parser.parse_args(argv)
     parsed_args.objective = " ".join(parsed_args.objective)
+
+    if parsed_args.max_steps is not None and parsed_args.max_steps < 1:
+        parser.error("--max-steps must be a positive integer")
 
     return parsed_args
 
@@ -525,12 +539,21 @@ if __name__ == "__main__":
         os.getenv("MODEL"),
         os.getenv("SUMMARIZER_MODEL"),
         cli_args.objective,
-        int(os.getenv("MAX_CONTEXT_SIZE")),
-        int(os.getenv("MAX_MEMORY_ITEM_SIZE")),
-        get_bool_env("DEBUG")
+        max_context_size=int(os.getenv("MAX_CONTEXT_SIZE")),
+        max_memory_item_size=int(os.getenv("MAX_MEMORY_ITEM_SIZE")),
+        debug=get_bool_env("DEBUG"),
     )
 
+    steps_taken = 0
+
     while True:
+
+        if cli_args.max_steps is not None and steps_taken >= cli_args.max_steps:
+            print(colored(
+                f"Stopped: reached --max-steps ({cli_args.max_steps}).",
+                "yellow",
+            ))
+            sys.exit(2)
 
         try:
             with Spinner():
@@ -538,6 +561,8 @@ if __name__ == "__main__":
         except InvalidLLMResponseError:
             print(colored("Invalid LLM response, retrying...", "red"))
             continue
+
+        steps_taken += 1
 
         (thought, command, arg) = miniagi.read_mind()
 
